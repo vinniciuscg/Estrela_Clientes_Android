@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">Pizzaria Estrela</string>
     <string name="action_settings">Settings</string>
+    <string name="registrar">Atualizar Cadastros</string>
+    <string name="taxa">Tem Taxa de Entrega</string>
+    <string name="emOperacao">Operando</string>
+    <string name="parado">Desligado</string>
+    <string name="descritorCardápio">Cardápio</string>
+    <string name="descritorCadastrar">Cadastrar</string>
+    <string name="button">Button</string>
 </resources>

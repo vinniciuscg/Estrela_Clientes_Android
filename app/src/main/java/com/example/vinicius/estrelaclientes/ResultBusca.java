@@ -33,7 +33,7 @@ public class ResultBusca extends AppCompatActivity {
 
         Intent it = getIntent();
         String strBusca = it.getStringExtra("busca");
-        clientes = (ArrayList<Cliente>) it.getExtras().getSerializable("clientes");
+        clientes = it.getExtras().getParcelableArrayList("clientes");
 
         caixaBusca = (EditText) findViewById(R.id.caixaBusca2);
         listView = (ListView) findViewById(R.id.listaResul);

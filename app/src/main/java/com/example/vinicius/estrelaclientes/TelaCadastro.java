@@ -4,26 +4,44 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.logging.Logger;
 
 import me.drakeet.materialdialog.MaterialDialog;
 
 public class TelaCadastro extends AppCompatActivity {
+
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private ArrayList<Cliente> clientes = null;
 
@@ -60,7 +78,8 @@ public class TelaCadastro extends AppCompatActivity {
         constraintLayout.setVisibility(View.INVISIBLE);
 
         Intent it = getIntent();
-        clientes = (ArrayList<Cliente>) it.getExtras().getSerializable("clientes");
+        clientes =it.getExtras().getParcelableArrayList("clientes");
+        //clientes.addAll((ArrayList<Cliente>) it.getExtras().getSerializable("clientes2"));
     }
 
     public void cadastrar(View v) {
@@ -85,6 +104,24 @@ public class TelaCadastro extends AppCompatActivity {
             Toast.makeText(this, "Campo obrigatório vazio", Toast.LENGTH_SHORT).show();
         }
 
+    }
+
+    public void baixar (View v){
+        clientes.clear();
+        db.collection("clientes").orderBy("chave")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+
+                            clientes = (ArrayList<Cliente>) task.getResult().toObjects(Cliente.class);
+                            salvarTodos();
+                        } else {
+                            Toast.makeText(TelaCadastro.this, "Erro ao carregar clientes do servidor", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 
     public void mostrarCliente(Cliente cliente){
@@ -115,6 +152,43 @@ public class TelaCadastro extends AppCompatActivity {
         str = str.replaceAll("[Ç]","C");
 
         return str;
+    }
+
+    public void salvarTodos(){
+
+        File arq;
+
+        try {
+
+            arq = new File(Environment.getExternalStorageDirectory().getPath()+"//Download//arq.txt");
+            BufferedWriter br = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(arq.getAbsolutePath()), "ISO-8859-1"));
+
+            try {
+                for(Cliente temp : clientes) {
+                    br.write(String.valueOf(temp.getChave()));
+                    br.newLine();
+                    br.write(temp.getNome());
+                    br.newLine();
+                    br.write(temp.getTelefone());
+                    br.newLine();
+                    br.write(temp.getEndereco());
+                    br.newLine();
+                    br.write(temp.getReferencia());
+                    br.newLine();
+                }
+                br.close();
+
+            } catch (IOException ex) {
+                Toast.makeText(this, "Erro ao escrever no arquivo", Toast.LENGTH_SHORT).show();
+            }finally {
+                Toast.makeText(this, "Clientes Armazenados", Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (FileNotFoundException e) {
+            Toast.makeText(this, "Arquivo não encontrado na pasta Download", Toast.LENGTH_SHORT).show();
+        } catch (UnsupportedEncodingException e) {
+            Toast.makeText(this, "Erro ao escrever no arquivo", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void salvarArquivo(){
